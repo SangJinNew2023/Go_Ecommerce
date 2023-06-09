@@ -12,3 +12,7 @@ func UserRoutes(incomingRoutes *gin.Engine) {
 	incomingRoutes.GET("users/productview", controllers.SearchProduct())
 	incomingRoutes.GET("users/search", controllers.SearchProductByQuery())
 }
+
+
+
+
