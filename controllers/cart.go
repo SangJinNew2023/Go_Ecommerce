@@ -41,7 +41,7 @@ func (app *Application) AddToCart() gin.Handler {
 
 		userQueryID := c.Query("userID")
 		if userQueryID == "" {
-			log.Println("product id is empty")
+			log.Println("user id is empty")
 
 			_ = c.AbortWithError(http.StatusBadRequest, errors.New("product id is empty"))
 			return
@@ -69,18 +69,108 @@ func (app *Application) AddToCart() gin.Handler {
 	}
 }
 
-func RemoteItem() gin.HandlerFunc {
+func (app *Application) RemoteItem() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		productQueryID := c.Query("id")
+		if productQueryID == "" {
+			log.Println("product id is empty")
+
+			_ = c.AbortWithError(http.StatusBadRequest, errors.New("product id is empty"))
+			return
+		}
+
+		userQueryID := c.Query("userID")
+		if userQueryID == "" {
+			log.Println("user id is empty")
+
+			_ = c.AbortWithError(http.StatusBadRequest, errors.New("product id is empty"))
+			return
+		}
+		//bjectIDFromHex creates a new ObjectID from a hex string. It returns an error if the hex string is not a valid ObjectID.
+		productID, err := primitive.ObjectIDFromHex(productQueryID)
+
+		if err != nil {
+			log.Println(err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+
+		defer cancel()
+
+		err = database.RemoveCartItem(ctx, app.prodCollection, app.userCollection, productID, userQueryID)
+
+		//IndentedJSON serializes the given struct as pretty JSON (indented + endlines) into the response body
+		if err != nil {
+			c.IndentedJSON(http.StatusInternalServerError, err)
+		}
+		c.IndentedJSON(200, "Successfully removed item from cart")
+	}
+}
+
+func (app *Application) GetItemFromCart() gin.HandlerFunc {
 
 }
 
-func GetItemFromCart() gin.HandlerFunc {
+func (app *Application) BuyFromCart() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userQueryId := c.Query("id")
 
+		if userQueryID == "" {
+			log.Panicln("user id is empty")
+			c.AbortWithError(http.StatusBadRequest, error.New("UserID is empty"))
+		}
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+
+		defer cancel()
+
+		err := database.BuyItemFromCart(ctx, app.userCollection, userQueryID)
+		if err != nil {
+			c.IndentedJSON(http.StatusInternalServerError, err)
+		}
+		c.IndentedJSON("Successfully placed the order")
+	}
 }
 
-func BuyFromCart() gin.HandlerFunc {
+func (app *Application) InstantBuy() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		productQueryID := c.Query("id")
+		if productQueryID == "" {
+			log.Println("product id is empty")
 
-}
+			_ = c.AbortWithError(http.StatusBadRequest, errors.New("product id is empty"))
+			return
+		}
 
-func InstantBuy() gin.HandlerFunc {
+		userQueryID := c.Query("userID")
+		if userQueryID == "" {
+			log.Println("user id is empty")
+
+			_ = c.AbortWithError(http.StatusBadRequest, errors.New("product id is empty"))
+			return
+		}
+		//bjectIDFromHex creates a new ObjectID from a hex string. It returns an error if the hex string is not a valid ObjectID.
+		productID, err := primitive.ObjectIDFromHex(productQueryID)
+
+		if err != nil {
+			log.Println(err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+
+		defer cancel()
+
+		err = database.InstantBuyer(ctx, app.prodCollection, app.userCollection, productID, userQueryID)
+
+		//IndentedJSON serializes the given struct as pretty JSON (indented + endlines) into the response body
+		if err != nil {
+			c.IndentedJSON(http.StatusInternalServerError, err)
+		}
+		c.IndentedJSON(200, "Successfully removed item from cart")
+	}
 
 }
