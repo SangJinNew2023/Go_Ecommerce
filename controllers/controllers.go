@@ -96,7 +96,7 @@ func Login() gin.HandlerFunc {
 		var ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
-		var user models.Userc
+		var user models.User
 		if err := c.BindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error" : err})
 			return
@@ -127,6 +127,7 @@ func Login() gin.HandlerFunc {
 	}
 
 }
+
 
 func ProductViewerAdmin() gin.HandlerFunc {
 
