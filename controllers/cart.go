@@ -31,6 +31,7 @@ func NewApplication(prodCollection, userCollection *mongo.Collection) *Applicati
 // Package primitive contains types similar to Go primitives for BSON types that do not have direct Go primitive representations.
 func (app *Application) AddToCart() gin.Handler {
 	return func(c *gin.Context) {
+		//create roductQueryID
 		productQueryID := c.Query("id")
 		if productQueryID == "" {
 			log.Println("product id is empty")
@@ -39,6 +40,7 @@ func (app *Application) AddToCart() gin.Handler {
 			return
 		}
 
+		//createa userQueryID
 		userQueryID := c.Query("userID")
 		if userQueryID == "" {
 			log.Println("user id is empty")
@@ -46,31 +48,35 @@ func (app *Application) AddToCart() gin.Handler {
 			_ = c.AbortWithError(http.StatusBadRequest, errors.New("product id is empty"))
 			return
 		}
+
+		//create productID
 		//bjectIDFromHex creates a new ObjectID from a hex string. It returns an error if the hex string is not a valid ObjectID.
 		productID, err := primitive.ObjectIDFromHex(productQueryID)
-
 		if err != nil {
 			log.Println(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 
+		//create context.WithTimeout
 		var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 
 		defer cancel()
 
+		//call database.AddProductToCar() with element created above
 		err = database.AddProductToCart(ctx, app.prodCollection, app.userCollection, productID, userQueryID)
-
 		//IndentedJSON serializes the given struct as pretty JSON (indented + endlines) into the response body
 		if err != nil {
 			c.IndentedJSON(http.StatusInternalServerError, err)
 		}
+
 		c.IndentedJSON(200, "Successfully added to the cart")
 	}
 }
 
-func (app *Application) RemoteItem() gin.HandlerFunc {
+func (app *Application) RemoveItem() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		//create roductQueryID
 		productQueryID := c.Query("id")
 		if productQueryID == "" {
 			log.Println("product id is empty")
@@ -79,6 +85,7 @@ func (app *Application) RemoteItem() gin.HandlerFunc {
 			return
 		}
 
+		//createa userQueryID
 		userQueryID := c.Query("userID")
 		if userQueryID == "" {
 			log.Println("user id is empty")
@@ -86,19 +93,21 @@ func (app *Application) RemoteItem() gin.HandlerFunc {
 			_ = c.AbortWithError(http.StatusBadRequest, errors.New("product id is empty"))
 			return
 		}
+
+		//create productID
 		//bjectIDFromHex creates a new ObjectID from a hex string. It returns an error if the hex string is not a valid ObjectID.
 		productID, err := primitive.ObjectIDFromHex(productQueryID)
-
 		if err != nil {
 			log.Println(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 
+		//create context.WithTimeout
 		var ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
-
 		defer cancel()
 
+		//call database.RemoveCartItem() with element created above
 		err = database.RemoveCartItem(ctx, app.prodCollection, app.userCollection, productID, userQueryID)
 
 		//IndentedJSON serializes the given struct as pretty JSON (indented + endlines) into the response body
