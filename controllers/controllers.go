@@ -198,8 +198,9 @@ func SearchProduct() gin.HandlerFunc {
 			c.AbortWithError(http.StatusInternalServerError)
 			return
 		}
+
 		defer cursor.Close()
-		if err := cursor.err(); err != nil {
+		if err := cursor.err(); err != nil { 
 			// Don't forget to log errors. I log them really simple here just
 			// to get the point across.
 			log.Println(err)
@@ -208,6 +209,7 @@ func SearchProduct() gin.HandlerFunc {
 		}
 
 		defer cancel()
+		
 		c.IndentedJSON(200, productlist)
 	}
 
