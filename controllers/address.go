@@ -34,6 +34,7 @@ func AddAddress() gin.HandlerFunc {
 		}
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 
+		// stage of query
 		macth_filter := bson.D{{Key:"$match", Value:bson.D{primitive.E{Key:"_id", Value: addresses}}}}
 		unwind := bson.D{{Key: "$unwind", Value:bson.D{primitive.E{Key:"patch", Value:"$address"}}}}
 		group := bson.D{{Key: "$group", Value:bson.D{primitive.E{Key:"_id", Value:"$address_id"},
@@ -42,6 +43,29 @@ func AddAddress() gin.HandlerFunc {
 		if err != nil {
 			c.IndentedJSON(500, "Internal server error")
 		}
+		
+		var addressinfo []bson.M
+		if err = pointcursor.All(ctx, &addressinfo); err != nil {
+			panic(err)
+		}
+
+		var size int32
+		for _, address_no := range addressinfo {
+			count := address_no["count"]
+			size = count.(int32)
+		}
+		if size < 2 {
+			filter := bson.D{primitive.E{Key:"_id", Value: address}}
+			update := bson.D{{Key: "$push", Value: bson.D{primitive.E{Key:"address", Value: addresses}}}}
+			_, err := UserCollection.UpdateOne(ctx, filter, update)
+			if err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			c.IndentedJSON(400, "Not Allowed")
+		}
+		defer cancel()
+		ctx.Done()
 	}
 }
 
